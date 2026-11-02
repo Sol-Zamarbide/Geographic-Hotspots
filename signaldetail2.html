@@ -1,0 +1,1191 @@
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signal Detection — Pfizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+    <script type="module" crossorigin="" src="/assets/index-DYPtqbZr.js"></script>
+    <link rel="stylesheet" crossorigin="" href="/assets/index-BwmLKVdU.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+      .geo-hotspots-card {
+        --geo-hotspot-high: #E5484D;
+        --geo-hotspot-medium: #F28C28;
+        --geo-hotspot-low: #F5C542;
+        margin-bottom: 1rem;
+        border: 1px solid var(--color-line, #e4e7ee);
+        border-radius: var(--radius-lg, 12px);
+        background: var(--color-surface, #fff);
+        box-shadow: 0 1px 2px #0d0a2c0d, 0 4px 14px #0d0a2c0d;
+        font-family: var(--font-sans, "Inter", ui-sans-serif, system-ui, sans-serif);
+        color: var(--color-ink, #10131c);
+      }
+      .geo-hotspots-head {
+        position: relative;
+        z-index: 2;
+        padding: 12px 16px 10px;
+        border-bottom: 1px solid var(--color-divider, #eef0f5);
+      }
+      .geo-hotspots-title-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .geo-hotspots-title {
+        margin: 0;
+        font-family: var(--font-display, "Space Grotesk", ui-sans-serif, system-ui, sans-serif);
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        line-height: 1.3;
+        color: var(--color-ink, #10131c);
+      }
+      .geo-hotspots-tip-wrap {
+        position: relative;
+        display: inline-flex;
+      }
+      .geo-hotspots-info {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--color-ink-4, #9099a8);
+        cursor: pointer;
+      }
+      .geo-hotspots-info:hover,
+      .geo-hotspots-info:focus-visible {
+        color: var(--color-accent, #1f2a8e);
+      }
+      .geo-hotspots-info:focus-visible {
+        outline: 2px solid var(--color-accent, #1f2a8e);
+        outline-offset: 2px;
+      }
+      .geo-hotspots-tip {
+        position: absolute;
+        z-index: 5;
+        top: 100%;
+        left: 0;
+        display: none;
+        width: 16rem;
+        margin-top: 6px;
+        padding: 12px;
+        border: 1px solid var(--color-line, #e4e7ee);
+        border-radius: var(--radius-md, 8px);
+        background: var(--color-surface, #fff);
+        box-shadow: 0 8px 30px #0d0a2c24, 0 2px 8px #0d0a2c14;
+        color: var(--color-ink-2, #3f4654);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.5;
+        text-align: left;
+        pointer-events: none;
+      }
+      .geo-hotspots-tip-wrap:hover .geo-hotspots-tip,
+      .geo-hotspots-tip-wrap:focus-within .geo-hotspots-tip {
+        display: block;
+      }
+      .geo-hotspots-legend {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 16px;
+        margin: 8px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      .geo-hotspots-legend li {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--color-ink-2, #3f4654);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+      .geo-hotspots-dot {
+        width: 8px;
+        height: 8px;
+        flex: 0 0 auto;
+        border-radius: 50%;
+      }
+      .geo-hotspots-dot--high { background: var(--geo-hotspot-high); }
+      .geo-hotspots-dot--medium { background: var(--geo-hotspot-medium); }
+      .geo-hotspots-dot--low { background: var(--geo-hotspot-low); }
+      .geo-hotspots-layout {
+        display: flex;
+        align-items: stretch;
+      }
+      .geo-hotspots-map-col {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .geo-hotspots-map-wrap {
+        position: relative;
+        z-index: 1;
+        min-width: 0;
+        height: 440px;
+        overflow: hidden;
+        isolation: isolate;
+      }
+      .geo-hotspots-map,
+      .geo-hotspots-map.leaflet-container {
+        width: 100%;
+        height: 100%;
+        background: #EEF0F4;
+        font-family: var(--font-sans, "Inter", ui-sans-serif, system-ui, sans-serif);
+      }
+      .geo-hotspots-note {
+        margin: 0;
+        padding: 10px 16px 12px;
+        border-top: 1px solid var(--color-divider, #eef0f5);
+        color: #6b7280;
+        font-size: 11.5px;
+        line-height: 1.4;
+      }
+      .geo-hotspots-empty {
+        position: absolute;
+        z-index: 500;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.55);
+        color: var(--color-ink-2, #3f4654);
+        font-size: 14px;
+        font-weight: 600;
+        text-align: center;
+        pointer-events: none;
+      }
+      .geo-hotspots-empty[hidden] {
+        display: none;
+      }
+      .geo-hotspots-map .leaflet-control-zoom {
+        margin: 0 12px 12px 0;
+        border: none;
+        box-shadow: none;
+      }
+      .geo-hotspots-map .leaflet-bar {
+        border: none;
+        box-shadow: none;
+      }
+      .geo-hotspots-map .leaflet-bar a {
+        width: 30px;
+        height: 30px;
+        line-height: 28px;
+        border: 1px solid var(--color-line, #e4e7ee);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--color-ink-2, #3f4654);
+        font-size: 16px;
+        box-shadow: 0 1px 2px #0d0a2c14;
+      }
+      .geo-hotspots-map .leaflet-bar a:first-child {
+        margin-bottom: 6px;
+        border-bottom: 1px solid var(--color-line, #e4e7ee);
+        border-radius: 8px;
+      }
+      .geo-hotspots-map .leaflet-bar a:last-child {
+        border-radius: 8px;
+      }
+      .geo-hotspots-map .leaflet-bar a:hover {
+        background: var(--color-accent-softer, #f5f6fd);
+        color: var(--color-ink, #10131c);
+      }
+      .geo-hotspots-map .leaflet-bar a:focus-visible {
+        outline: 2px solid var(--color-accent, #1f2a8e);
+        outline-offset: 2px;
+      }
+      .geo-hotspots-map .leaflet-control-attribution {
+        max-width: calc(100% - 56px);
+        background: rgba(255, 255, 255, 0.82);
+        color: #6b7280;
+        font-size: 10px;
+        line-height: 1.3;
+      }
+      .leaflet-container .geo-hotspot-marker {
+        background: transparent;
+        border: none;
+        cursor: default;
+      }
+      .geo-hotspot-halo,
+      .geo-hotspot-count {
+        position: absolute;
+        border-radius: 50%;
+        box-sizing: border-box;
+      }
+      .geo-hotspot-halo {
+        inset: 0;
+        background: var(--geo-hotspot-color);
+        opacity: 0.25;
+      }
+      .geo-hotspot-count {
+        inset: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #fff;
+        background: var(--geo-hotspot-color);
+        color: #fff;
+        font-family: var(--font-sans, "Inter", ui-sans-serif, system-ui, sans-serif);
+        font-weight: 700;
+        line-height: 1;
+        white-space: nowrap;
+        text-shadow: 0 1px 2px rgba(16, 19, 28, 0.35);
+      }
+      .geo-hotspot-marker--high { --geo-hotspot-color: var(--geo-hotspot-high); }
+      .geo-hotspot-marker--medium { --geo-hotspot-color: var(--geo-hotspot-medium); }
+      .geo-hotspot-marker--low { --geo-hotspot-color: var(--geo-hotspot-low); }
+      .leaflet-geoHotspots-pane .geo-hotspot-marker {
+        pointer-events: none;
+      }
+      .leaflet-geoHotspots-pane .geo-hotspot-marker--action {
+        pointer-events: auto;
+      }
+      .geo-hotspot-hit {
+        position: absolute;
+        inset: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+      }
+      .geo-hotspot-hit:focus {
+        outline: none;
+      }
+      .geo-hotspot-hit:focus-visible {
+        outline: 2px solid var(--color-accent, #1f2a8e);
+        outline-offset: 3px;
+      }
+      .geo-hotspot-marker.is-selected .geo-hotspot-count {
+        box-shadow: 0 0 0 3px #3B3F9E;
+      }
+      .geo-panel {
+        flex: 0 0 auto;
+        width: 0;
+        max-height: 440px;
+        overflow: hidden;
+        opacity: 0;
+        box-sizing: border-box;
+        background: var(--color-surface, #fff);
+        border-left: 1px solid transparent;
+        color: var(--color-ink, #10131c);
+        font-family: var(--font-sans, "Inter", ui-sans-serif, system-ui, sans-serif);
+      }
+      .geo-panel[hidden] {
+        display: none;
+      }
+      .geo-hotspots-card.is-open .geo-panel {
+        width: 420px;
+        opacity: 1;
+        overflow-x: hidden;
+        overflow-y: auto;
+        border-left-color: var(--color-line, #e4e7ee);
+        border-bottom-right-radius: var(--radius-lg, 12px);
+      }
+      .geo-panel-inner {
+        width: 420px;
+        box-sizing: border-box;
+        padding: 14px 16px 16px;
+      }
+      .geo-panel-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .geo-panel-dot {
+        width: 8px;
+        height: 8px;
+        flex: 0 0 auto;
+        border-radius: 50%;
+        background: var(--geo-hotspot-medium);
+      }
+      .geo-panel-title {
+        margin: 0;
+        min-width: 0;
+        flex: 1 1 auto;
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.3;
+      }
+      .geo-panel-close {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        flex: 0 0 auto;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--color-ink-3, #6b7280);
+        cursor: pointer;
+      }
+      .geo-panel-close:hover {
+        background: var(--color-accent-softer, #f5f6fd);
+        color: var(--color-ink, #10131c);
+      }
+      .geo-panel-totals {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 6px 10px;
+        margin-top: 12px;
+      }
+      .geo-panel-total {
+        font-family: var(--font-display, "Space Grotesk", ui-sans-serif, system-ui, sans-serif);
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+      }
+      .geo-panel-total-label,
+      .geo-panel-count {
+        color: #6b7280;
+        font-size: 12px;
+        line-height: 1.3;
+      }
+      .geo-panel-count {
+        flex: 1 0 100%;
+      }
+      .geo-panel-columns,
+      .geo-panel-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: start;
+      }
+      .geo-panel-columns {
+        margin-top: 16px;
+        padding-bottom: 6px;
+        color: #6b7280;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .geo-panel-columns span:last-child,
+      .geo-panel-amount {
+        text-align: right;
+      }
+      .geo-panel-row {
+        padding: 8px 0;
+        border-top: 1px solid var(--color-divider, #eef0f5);
+      }
+      .geo-panel-name {
+        color: var(--color-ink, #10131c);
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.3;
+        text-decoration: none;
+      }
+      .geo-panel-name:hover {
+        text-decoration: underline;
+      }
+      .geo-panel-amount {
+        font-size: 13px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .geo-panel-extra {
+        display: grid;
+        grid-template-rows: 0fr;
+      }
+      .geo-panel.is-expanded .geo-panel-extra {
+        grid-template-rows: 1fr;
+      }
+      .geo-panel-extra-clip {
+        min-height: 0;
+        overflow: hidden;
+      }
+      .geo-panel-more {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin: 8px 0 0;
+        padding: 2px 0;
+        border: 0;
+        background: transparent;
+        color: #3B3F9E;
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.3;
+      }
+      .geo-panel-more:hover {
+        text-decoration: underline;
+      }
+      .geo-panel-chevron {
+        flex: 0 0 auto;
+        transition: transform 200ms ease;
+      }
+      .geo-panel.is-expanded .geo-panel-chevron {
+        transform: rotate(180deg);
+      }
+      .geo-panel button:focus-visible,
+      .geo-panel a:focus-visible {
+        outline: 2px solid var(--color-accent, #1f2a8e);
+        outline-offset: 2px;
+      }
+      @media (max-width: 900px) {
+        .geo-hotspots-layout {
+          flex-direction: column;
+        }
+        .geo-panel {
+          width: 100%;
+          max-height: 0;
+          border-left: 0;
+        }
+        .geo-hotspots-card.is-open .geo-panel {
+          width: 100%;
+          max-height: 440px;
+          border-left-color: transparent;
+          border-top: 1px solid var(--color-line, #e4e7ee);
+          border-bottom-right-radius: var(--radius-lg, 12px);
+          border-bottom-left-radius: var(--radius-lg, 12px);
+        }
+        .geo-panel-inner {
+          width: 100%;
+        }
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .geo-panel {
+          transition: width 200ms ease, max-height 200ms ease, opacity 200ms ease;
+        }
+        .geo-panel-extra {
+          transition: grid-template-rows 200ms ease;
+        }
+      }
+      .geo-hotspots-title-row {
+        flex-wrap: wrap;
+      }
+      .geo-zip-search {
+        position: relative;
+        z-index: 3;
+        width: 220px;
+        flex: 0 0 auto;
+        margin-left: auto;
+      }
+      .geo-zip-icon {
+        position: absolute;
+        top: 50%;
+        left: 10px;
+        color: var(--color-ink-4, #9099a8);
+        pointer-events: none;
+        transform: translateY(-50%);
+      }
+      .geo-zip-input {
+        box-sizing: border-box;
+        width: 100%;
+        height: 34px;
+        margin: 0;
+        padding: 0 30px;
+        border: 1px solid #D5D9E2;
+        border-radius: 8px;
+        background: #fff;
+        color: var(--color-ink, #10131c);
+        font-family: var(--font-sans, "Inter", ui-sans-serif, system-ui, sans-serif);
+        font-size: 13px;
+      }
+      .geo-zip-input::placeholder {
+        color: var(--color-ink-4, #9099a8);
+      }
+      .geo-zip-input:focus {
+        outline: none;
+      }
+      .geo-zip-input:focus-visible,
+      .geo-zip-clear:focus-visible {
+        outline: 2px solid var(--color-accent, #1f2a8e);
+        outline-offset: 2px;
+      }
+      .geo-zip-clear {
+        position: absolute;
+        top: 50%;
+        right: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 4px;
+        background: transparent;
+        color: var(--color-ink-3, #6b7280);
+        cursor: pointer;
+        transform: translateY(-50%);
+      }
+      .geo-zip-clear[hidden] {
+        display: none;
+      }
+      .geo-zip-clear:hover {
+        color: var(--color-ink, #10131c);
+      }
+      .geo-zip-list {
+        position: absolute;
+        z-index: 6;
+        top: calc(100% + 4px);
+        right: 0;
+        left: 0;
+        margin: 0;
+        padding: 4px;
+        list-style: none;
+        border: 1px solid #D5D9E2;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 8px 30px #0d0a2c24, 0 2px 8px #0d0a2c14;
+      }
+      .geo-zip-list[hidden] {
+        display: none;
+      }
+      .geo-zip-option {
+        padding: 6px 8px;
+        border-radius: 6px;
+        color: var(--color-ink, #10131c);
+        font-size: 13px;
+        line-height: 1.3;
+        cursor: pointer;
+      }
+      .geo-zip-option.is-active {
+        background: var(--color-accent-softer, #f5f6fd);
+      }
+      .geo-zip-message {
+        position: absolute;
+        top: calc(100% + 4px);
+        right: 0;
+        width: 340px;
+        margin: 0;
+        color: #6b7280;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+      .geo-hotspot-marker.is-pulse .geo-hotspot-count {
+        animation: geo-zip-pulse 1.2s ease forwards;
+      }
+      @keyframes geo-zip-pulse {
+        from { box-shadow: 0 0 0 3px #3B3F9E; }
+        to { box-shadow: 0 0 0 3px rgba(59, 63, 158, 0); }
+      }
+      @media (max-width: 600px) {
+        .geo-zip-search,
+        .geo-zip-message {
+          right: auto;
+          left: 0;
+          width: 100%;
+          margin-left: 0;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .geo-panel,
+        .geo-panel-extra,
+        .geo-panel-chevron {
+          transition: none;
+        }
+        .geo-hotspot-marker.is-pulse .geo-hotspot-count {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"><div class="flex min-h-screen flex-col"><header class="relative z-40 border-b border-line bg-surface/80 backdrop-blur"><div class="mx-auto flex h-16 max-w-[1600px] items-center gap-4 px-6"><a aria-label="Signal Detection — go to Overview" class="flex items-center gap-2.5" href="/" data-discover="true"><div class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-accent-2 text-white shadow-action"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg></div><span class="font-display text-[17px] font-semibold tracking-tight">Signal Detection</span></a><nav aria-label="Primary" class="ml-2 flex items-center gap-1"><a class="flex h-9 items-center gap-2 rounded-md px-3.5 text-[13.5px] font-semibold transition-colors text-ink-2 hover:bg-accent-softer hover:text-ink" href="/" data-discover="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-ink-4"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>Overview</a><a class="flex h-9 items-center gap-2 rounded-md px-3.5 text-[13.5px] font-semibold transition-colors bg-accent text-white shadow-action" href="/signals" data-discover="true" aria-current="page"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-white"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>Signals</a><a class="flex h-9 items-center gap-2 rounded-md px-3.5 text-[13.5px] font-semibold transition-colors text-ink-2 hover:bg-accent-softer hover:text-ink" href="/pharmacies" data-discover="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-ink-4"><rect x="3" y="3" width="18" height="18" rx="4"></rect><path d="M12 8v8M8 12h8"></path></svg>Pharmacies</a></nav><div class="flex-1"></div><div class="relative"><button aria-expanded="false" aria-label="Notifications — 55 unread" class="relative flex h-9 w-9 items-center justify-center rounded-md border border-line bg-surface text-ink-3 hover:border-line-strong"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg><span class="tnum absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent px-1 text-[10.5px] font-bold text-white">55</span></button></div><div class="relative"><button aria-expanded="false" aria-label="User menu" class="flex items-center gap-2.5 rounded-md px-1.5 py-1 hover:bg-surface-alt"><div class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-accent-2 to-accent text-[11px] font-bold text-white">LF</div><div class="hidden text-left leading-tight md:block"><div class="text-[13px] font-semibold text-ink">Laurence Fowler</div><div class="text-[11.5px] text-ink-4">Affordability Solutions Director</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-ink-4"><path d="m6 9 6 6 6-6"></path></svg></button></div></div><div class="border-t border-divider"><div class="mx-auto flex min-h-12 max-w-[1600px] flex-wrap items-center gap-2 px-6 py-1.5"><span class="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-ink-4">Context<span class="group/tip inline-flex relative "><button type="button" aria-describedby="_r_0_" class="flex h-4 w-4 items-center justify-center rounded-full text-ink-4 hover:text-accent focus-visible:text-accent focus:outline-none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path></svg></button><span id="_r_0_" role="tooltip" class="pointer-events-none absolute z-40 hidden w-64 rounded-md border border-line bg-surface p-3 text-left normal-case tracking-normal shadow-pop group-hover/tip:block group-focus-within/tip:block top-full mt-1.5 left-0"><span class="block text-[12px] font-normal leading-relaxed text-ink-2 ">Context filters are global and apply across all pages.</span></span></span></span><div class="relative"><select aria-label="Filter by product" class="h-8 appearance-none rounded-md border pl-2.5 pr-7 text-[12.5px] font-medium focus:outline-none border-line bg-surface text-ink-2 hover:border-line-strong"><option>All products</option><option>Nurtec</option><option>Eucrisa</option></select><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-ink-4"><path d="m6 9 6 6 6-6"></path></svg></div><div class="relative"><select aria-label="Filter by date period" class="h-8 appearance-none rounded-md border pl-2.5 pr-7 text-[12.5px] font-medium focus:outline-none border-accent/40 bg-accent-softer text-accent"><option value="week">Past week</option><option value="month">Past month</option><option value="year">Past year</option><option value="custom">Custom range</option></select><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-ink-4"><path d="m6 9 6 6 6-6"></path></svg></div><p class="ml-auto flex items-center gap-2 text-[11.5px] text-ink-3"><span aria-hidden="true" class="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-ai-soft text-ai"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM19 17l.9 2.1L22 20l-2.1.9L19 23l-.9-2.1L16 20l2.1-.9z"></path></svg></span>Information in the sections identified is created by generative AI. Generative AI is experimental and may make mistakes.</p></div></div></header><main class="mx-auto w-full max-w-[1600px] flex-1 px-6 pb-10 pt-6"><button class="mb-3 inline-flex items-center gap-1 text-[12.5px] font-semibold text-ink-3 hover:text-accent"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="rotate-180"><path d="m9 6 6 6-6 6"></path></svg>Back</button><div class="mb-4 rounded-lg border border-line bg-surface shadow-card"><div class="flex flex-wrap items-start gap-3 px-5 py-4"><div class="min-w-0"><h1 class="font-display text-[22px] font-bold leading-snug tracking-tight text-ink">Quantity Change: Nurtec – Sudden Change in Avg Quantity Per Dispense</h1><div class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[12.5px] text-ink-3"><a title="How this signal type is calculated" class="inline-flex items-center gap-1 font-medium text-accent hover:underline" href="/methodology#quantity_change" data-discover="true">Quantity change<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg></a><span class="font-mono text-[11px] text-ink-4">SIG-001</span><span title="First detected Apr 11, 2025">Last update May 10, 2026 · 6d ago</span><span>TrialCard</span><span class="inline-flex items-center gap-1">Business rules detection<span class="group/tip relative inline-flex "><button type="button" aria-describedby="_r_64_" class="flex h-4 w-4 items-center justify-center rounded-full text-ink-4 hover:text-accent focus-visible:text-accent focus:outline-none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path></svg></button><span id="_r_64_" role="tooltip" class="pointer-events-none absolute top-full z-40 mt-1.5 hidden w-64 rounded-md border border-line bg-surface p-3 text-left normal-case shadow-pop group-hover/tip:block group-focus-within/tip:block left-0"><span class="block text-[12px] font-semibold text-ink">Detection mode</span><span class="mt-1 block text-[12px] font-normal leading-relaxed text-ink-2">How a signal was surfaced: rule-based (breaches a defined threshold), look-alike (resembles a prior resolved case), or open-ended (statistical anomaly vs. a learned baseline).</span></span></span></span></div></div><span class="flex-1"></span><div class="flex flex-wrap items-center gap-2"><button class="inline-flex h-9 items-center gap-1.5 rounded-md bg-accent px-3.5 text-[13px] font-semibold text-white shadow-action hover:bg-accent-2 disabled:cursor-not-allowed disabled:opacity-50" disabled="" title="Every impacted pharmacy already has a review line for this signal — manage those cases on the pharmacy record.">Open investigation</button></div></div><div class="grid grid-cols-4 divide-x divide-divider border-t border-divider"><div class="px-5 py-3"><div class="text-[12px] font-semibold uppercase tracking-wide text-ink-4">Impacted pharmacies</div><div class="tnum mt-0.5 font-display text-[26px] font-semibold text-ink">2</div></div><div class="px-5 py-3"><div class="flex items-center gap-1 text-[12px] font-semibold uppercase tracking-wide text-ink-4">New pharmacies<span class="group/tip relative inline-flex "><button type="button" aria-describedby="_r_65_" class="flex h-4 w-4 items-center justify-center rounded-full text-ink-4 hover:text-accent focus-visible:text-accent focus:outline-none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path></svg></button><span id="_r_65_" role="tooltip" class="pointer-events-none absolute top-full z-40 mt-1.5 hidden w-64 rounded-md border border-line bg-surface p-3 text-left normal-case shadow-pop group-hover/tip:block group-focus-within/tip:block left-0"><span class="block text-[12px] font-semibold text-ink">New pharmacies</span><span class="mt-1 block text-[12px] font-normal leading-relaxed text-ink-2">Joined this signal's scope within the last 14 days.</span></span></span></div><div class="tnum mt-0.5 font-display text-[26px] font-semibold text-ink">1</div></div><div class="px-5 py-3"><div class="text-[12px] font-semibold uppercase tracking-wide text-ink-4">Pharmacies under investigation</div><div class="tnum mt-0.5 font-display text-[26px] font-semibold text-ink">1</div></div><div class="px-5 py-3"><div class="text-[12px] font-semibold uppercase tracking-wide text-ink-4">Resolved</div><div class="tnum mt-0.5 font-display text-[26px] font-semibold text-ink">1</div></div></div></div><div class="grid grid-cols-1 gap-4"><section class="rounded-lg border border-line bg-surface shadow-card"><div class="flex flex-wrap items-center gap-3 border-b border-divider px-4 py-2.5"><div class="flex items-baseline gap-2"><h3 class="text-[11.5px] font-bold uppercase tracking-wide text-ink-4">Claims &amp; pharmacies over time</h3><span class="text-[11.5px] text-ink-4">· cumulative, daily, past week (set in the context bar)</span></div><span class="group/tip relative inline-flex "><button type="button" aria-describedby="_r_66_" class="flex h-4 w-4 items-center justify-center rounded-full text-ink-4 hover:text-accent focus-visible:text-accent focus:outline-none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path></svg></button><span id="_r_66_" role="tooltip" class="pointer-events-none absolute top-full z-40 mt-1.5 hidden w-64 rounded-md border border-line bg-surface p-3 text-left normal-case shadow-pop group-hover/tip:block group-focus-within/tip:block left-0"><span class="block text-[12px] font-semibold text-ink">Claims &amp; pharmacies over time</span><span class="mt-1 block text-[12px] font-normal leading-relaxed text-ink-2">Cumulative claims and distinct pharmacies this signal has ever touched, plotted daily — markers mark each detection run; a running total, not a single static figure. The dashed line repeats the same totals over the equal-length prior period, day-aligned (rolling windows only — custom ranges have no defined prior period).</span></span></span><span class="flex-1"></span><span class="flex items-center gap-1.5 text-[12px] font-semibold text-ink-2"><span class="h-2 w-2 rounded-full" style="background: var(--color-ai);"></span>Claims<span class="tnum font-normal text-ink-4">28 cumulative</span></span><span class="flex items-center gap-1.5 text-[12px] font-semibold text-ink-2"><span class="w-3 border-t-2 border-dashed opacity-60" style="border-color: var(--color-ai);"></span>Prior week<span class="tnum font-normal text-ink-4">27 cumulative</span></span><div class="flex items-center gap-0.5 rounded-md border border-line bg-page-soft p-0.5"><button aria-pressed="true" class="rounded px-2.5 py-1 text-[11.5px] font-semibold bg-surface text-ink shadow-card">Claims</button><button aria-pressed="false" class="rounded px-2.5 py-1 text-[11.5px] font-semibold text-ink-3 hover:text-ink-2">Pharmacies</button></div></div><div class="tnum px-4 py-3" role="img" aria-label="Cumulative claims (28) across 7 days, with a dashed prior week comparison line"><div class="recharts-responsive-container" style="width: 100%; height: 220px; min-width: 0px;"><div style="width: 0px; overflow-x: visible;"><div width="1321" height="220" class="recharts-wrapper" style="position: relative; cursor: default; width: 1321px; height: 220px;"><div xmlns="http://www.w3.org/1999/xhtml" tabindex="-1" class="recharts-tooltip-wrapper recharts-tooltip-wrapper-left recharts-tooltip-wrapper-bottom" style="visibility: visible; pointer-events: none; position: absolute; top: 0px; left: 0px; transform: translate(1263.19px, 68px);"><div class="rounded-md border border-line bg-surface px-3 py-2 shadow-pop"><p class="text-[11px] text-ink-3">Sat, May 16, 2026</p><div class="mt-1 flex flex-col gap-0.5"><div class="flex items-center gap-1.5"><span class="h-0.5 w-3 shrink-0 rounded-full" style="background: var(--color-ai);"></span><span class="tnum text-[12px] font-semibold text-ink">27 cumulative claims</span><span class="text-[11.5px] text-ink-3">Prior week</span></div><div class="flex items-center gap-1.5"><span class="h-0.5 w-3 shrink-0 rounded-full" style="background: var(--color-ai);"></span><span class="tnum text-[12px] font-semibold text-ink">28 cumulative claims</span><span class="text-[11.5px] text-ink-3">Claims</span></div></div></div></div><svg role="application" tabindex="0" class="recharts-surface" width="1321" height="220" viewBox="0 0 1321 220" style="width: 100%; height: 100%; display: block;"><title></title><desc></desc><g tabindex="-1" class="recharts-zIndex-layer_-100"><g class="recharts-cartesian-grid"><g class="recharts-cartesian-grid-horizontal"><line stroke="var(--color-divider)" x="48" y="8" width="1261" height="182" x1="48" y1="190" x2="1309" y2="190" fill="none"></line><line stroke="var(--color-divider)" x="48" y="8" width="1261" height="182" x1="48" y1="144.5" x2="1309" y2="144.5" fill="none"></line><line stroke="var(--color-divider)" x="48" y="8" width="1261" height="182" x1="48" y1="99" x2="1309" y2="99" fill="none"></line><line stroke="var(--color-divider)" x="48" y="8" width="1261" height="182" x1="48" y1="53.5" x2="1309" y2="53.5" fill="none"></line><line stroke="var(--color-divider)" x="48" y="8" width="1261" height="182" x1="48" y1="8" x2="1309" y2="8" fill="none"></line></g></g></g><g tabindex="-1" class="recharts-zIndex-layer_-50"></g><defs><clipPath id="recharts1494-clip"><rect x="48" y="8" height="182" width="1261"></rect></clipPath></defs><g tabindex="-1" class="recharts-zIndex-layer_100"></g><g tabindex="-1" class="recharts-zIndex-layer_200"></g><g tabindex="-1" class="recharts-zIndex-layer_300"></g><g tabindex="-1" class="recharts-zIndex-layer_400"><g class="recharts-layer recharts-line"><g class="recharts-layer recharts-shape"><path name="Prior week" stroke="var(--color-ai)" stroke-opacity="0.45" stroke-width="1.5" fill="none" id="recharts-line-_r_67_" height="182" width="1261" class="recharts-curve recharts-line-curve" stroke-dasharray="5 4" d="M48,27.5C118.056,27.5,188.111,27.5,258.167,27.5C328.222,27.5,398.278,27.5,468.333,27.5C538.389,27.5,608.444,27.5,678.5,27.5C748.556,27.5,818.611,27.5,888.667,27.5C958.722,27.5,1028.778,23.167,1098.833,21C1168.889,18.833,1238.944,16.667,1309,14.5"></path></g></g><g class="recharts-layer recharts-line"><g class="recharts-layer recharts-shape"><path name="Claims" stroke="var(--color-ai)" stroke-width="2" fill="none" id="recharts-line-_r_68_" height="182" width="1261" class="recharts-curve recharts-line-curve" d="M48,8C118.056,8,188.111,8,258.167,8C328.222,8,398.278,8,468.333,8C538.389,8,608.444,8,678.5,8C748.556,8,818.611,8,888.667,8C958.722,8,1028.778,8,1098.833,8C1168.889,8,1238.944,8,1309,8"></path></g></g></g><g tabindex="-1" class="recharts-zIndex-layer_500"><g class="recharts-layer recharts-cartesian-axis recharts-xAxis xAxis"><g class="recharts-cartesian-axis-ticks recharts-xAxis-ticks"><g class="recharts-cartesian-axis-tick-lines recharts-xAxis-tick-lines"><g class="recharts-layer recharts-cartesian-axis-tick"></g><g class="recharts-layer recharts-cartesian-axis-tick"></g><g class="recharts-layer recharts-cartesian-axis-tick"></g><g class="recharts-layer recharts-cartesian-axis-tick"></g><g class="recharts-layer recharts-cartesian-axis-tick"></g><g class="recharts-layer recharts-cartesian-axis-tick"></g><g class="recharts-layer recharts-cartesian-axis-tick"></g></g></g></g><g class="recharts-layer recharts-cartesian-axis recharts-yAxis yAxis"><g class="recharts-cartesian-axis-ticks recharts-yAxis-ticks"><g class="recharts-cartesian-axis-tick-lines recharts-yAxis-tick-lines"><g class="recharts-layer recharts-cartesian-axis-tick"></g><g class="recharts-layer recharts-cartesian-axis-tick"></g><g class="recharts-layer recharts-cartesian-axis-tick"></g><g class="recharts-layer recharts-cartesian-axis-tick"></g><g class="recharts-layer recharts-cartesian-axis-tick"></g></g></g></g></g><g tabindex="-1" class="recharts-zIndex-layer_600"><g class="recharts-layer recharts-line-dots"><g><circle cx="48" cy="8" r="3" fill="var(--color-surface)" stroke="var(--color-ai)" stroke-width="1.5"></circle></g><g></g><g></g><g></g><g></g><g></g><g></g></g></g><g tabindex="-1" class="recharts-zIndex-layer_1000"></g><g tabindex="-1" class="recharts-zIndex-layer_1100"><path stroke="var(--color-line-strong)" pointer-events="none" width="1261" height="182" stroke-dasharray="3 3" class="recharts-curve recharts-tooltip-cursor" d="M1505,8L1505,190"></path></g><g tabindex="-1" class="recharts-zIndex-layer_1200"><g class="recharts-layer recharts-active-dot"><circle cx="1309" cy="14.499999999999996" r="3" fill="var(--color-ai)" stroke-width="2" stroke="#fff" class="recharts-dot"></circle></g><g class="recharts-layer recharts-active-dot"><circle cx="1309" cy="8" r="3.5" fill="var(--color-ai)" stroke-width="2" stroke="#fff" class="recharts-dot"></circle></g></g><g tabindex="-1" class="recharts-zIndex-layer_2000"><g class="recharts-cartesian-axis-tick-labels recharts-xAxis-tick-labels"><g class="recharts-layer recharts-cartesian-axis-tick-label"><text height="30" orientation="bottom" width="1261" stroke="none" font-size="10" x="48" y="204" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--color-ink-4)"><tspan x="48" dy="0.71em">Sun, May 10</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick-label"><text height="30" orientation="bottom" width="1261" stroke="none" font-size="10" x="258.16666666666663" y="204" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--color-ink-4)"><tspan x="258.16666666666663" dy="0.71em">Mon, May 11</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick-label"><text height="30" orientation="bottom" width="1261" stroke="none" font-size="10" x="468.3333333333333" y="204" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--color-ink-4)"><tspan x="468.3333333333333" dy="0.71em">Tue, May 12</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick-label"><text height="30" orientation="bottom" width="1261" stroke="none" font-size="10" x="678.5" y="204" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--color-ink-4)"><tspan x="678.5" dy="0.71em">Wed, May 13</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick-label"><text height="30" orientation="bottom" width="1261" stroke="none" font-size="10" x="888.6666666666666" y="204" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--color-ink-4)"><tspan x="888.6666666666666" dy="0.71em">Thu, May 14</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick-label"><text height="30" orientation="bottom" width="1261" stroke="none" font-size="10" x="1098.8333333333333" y="204" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--color-ink-4)"><tspan x="1098.8333333333333" dy="0.71em">Fri, May 15</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick-label"><text height="30" orientation="bottom" width="1261" stroke="none" font-size="10" x="1295.4375" y="204" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--color-ink-4)"><tspan x="1295.4375" dy="0.71em">Sat, May 16</tspan></text></g></g><g class="recharts-cartesian-axis-tick-labels recharts-yAxis-tick-labels"><g class="recharts-layer recharts-cartesian-axis-tick-label"><text width="48" orientation="left" height="182" stroke="none" font-size="10" x="40" y="190" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="end" fill="var(--color-ink-4)"><tspan x="40" dy="0.355em">0</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick-label"><text width="48" orientation="left" height="182" stroke="none" font-size="10" x="40" y="144.5" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="end" fill="var(--color-ink-4)"><tspan x="40" dy="0.355em">7</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick-label"><text width="48" orientation="left" height="182" stroke="none" font-size="10" x="40" y="99" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="end" fill="var(--color-ink-4)"><tspan x="40" dy="0.355em">14</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick-label"><text width="48" orientation="left" height="182" stroke="none" font-size="10" x="40" y="53.5" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="end" fill="var(--color-ink-4)"><tspan x="40" dy="0.355em">21</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick-label"><text width="48" orientation="left" height="182" stroke="none" font-size="10" x="40" y="8" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="end" fill="var(--color-ink-4)"><tspan x="40" dy="0.355em">28</tspan></text></g></g></g></svg></div></div></div></div></section><section class="geo-hotspots-card" aria-labelledby="geo-hotspots-title"><div class="geo-hotspots-head"><div class="geo-hotspots-title-row"><h2 id="geo-hotspots-title" class="geo-hotspots-title">Geographic Hotspots</h2><span class="geo-hotspots-tip-wrap"><button type="button" class="geo-hotspots-info" aria-label="About geographic hotspots" aria-describedby="geo-hotspots-tip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path></svg></button><span id="geo-hotspots-tip" role="tooltip" class="geo-hotspots-tip">Areas where several pharmacies carry this signal.</span></span><div class="geo-zip-search"><svg class="geo-zip-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.35-4.35"></path></svg><input id="geo-zip-input" class="geo-zip-input" type="text" inputmode="numeric" maxlength="5" placeholder="Search ZIP3" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="geo-zip-list" aria-label="Search hotspots by ZIP3"><button type="button" class="geo-zip-clear" hidden aria-label="Clear search"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg></button><ul id="geo-zip-list" class="geo-zip-list" role="listbox" hidden></ul><p id="geo-zip-message" class="geo-zip-message" aria-live="polite"></p></div></div><ul class="geo-hotspots-legend"><li><span class="geo-hotspots-dot geo-hotspots-dot--high" aria-hidden="true"></span>High exposure</li><li><span class="geo-hotspots-dot geo-hotspots-dot--medium" aria-hidden="true"></span>Medium exposure</li><li><span class="geo-hotspots-dot geo-hotspots-dot--low" aria-hidden="true"></span>Low exposure</li></ul></div><div class="geo-hotspots-layout"><div class="geo-hotspots-map-col"><div class="geo-hotspots-map-wrap"><div id="geo-hotspots-map" class="geo-hotspots-map" role="region" aria-label="Map of geographic hotspots in the contiguous United States"></div><p id="geo-hotspots-empty" class="geo-hotspots-empty" hidden>No hotspots for this signal under current criteria.</p></div><p class="geo-hotspots-note">Circle size and color represent estimated exposure for this signal.</p></div><div id="geo-panel" class="geo-panel" hidden></div></div></section><section class="overflow-hidden rounded-lg border border-line bg-surface shadow-card"><div class="border-b border-divider px-4 py-2.5"><div class="flex flex-wrap items-center gap-2"><div class="flex items-baseline gap-2"><h3 class="text-[11.5px] font-bold uppercase tracking-wide text-ink-4">Impacted pharmacies</h3><span class="text-[11.5px] text-ink-4">· 2 pharmacies · claim counts, past week</span></div><span class="flex-1"></span><div class="relative"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-ink-4"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.35-4.35"></path></svg><input placeholder="Search name or NPI…" aria-label="Search impacted pharmacies" class="h-7 w-44 rounded-md border border-line bg-surface pl-7 pr-2 text-[12px] text-ink placeholder:text-ink-4 focus:border-accent focus:outline-none" value=""></div></div><div class="mt-2 flex flex-wrap items-center gap-1.5"><button aria-pressed="true" class="h-7 rounded-md border px-2.5 text-[11.5px] font-semibold border-accent/40 bg-accent-soft text-accent">All statuses</button><button aria-pressed="false" class="h-7 rounded-md border px-2.5 text-[11.5px] font-semibold border-line bg-surface text-ink-3 hover:border-line-strong">Not investigated</button><button aria-pressed="false" class="h-7 rounded-md border px-2.5 text-[11.5px] font-semibold border-line bg-surface text-ink-3 hover:border-line-strong">Investigating</button><button aria-pressed="false" class="h-7 rounded-md border px-2.5 text-[11.5px] font-semibold border-line bg-surface text-ink-3 hover:border-line-strong">Escalated</button><button aria-pressed="false" class="h-7 rounded-md border px-2.5 text-[11.5px] font-semibold border-line bg-surface text-ink-3 hover:border-line-strong">Reopened</button><button aria-pressed="false" class="h-7 rounded-md border px-2.5 text-[11.5px] font-semibold border-line bg-surface text-ink-3 hover:border-line-strong">Resolved</button><span class="mx-0.5 h-4 w-px bg-divider"></span><button aria-pressed="false" class="h-7 rounded-md border px-2.5 text-[11.5px] font-semibold border-line bg-surface text-ink-3 hover:border-line-strong">Watched</button><button aria-pressed="false" class="h-7 rounded-md border px-2.5 text-[11.5px] font-semibold border-line bg-surface text-ink-3 hover:border-line-strong">Terminated</button></div></div><div class="divide-y divide-divider"><div role="button" tabindex="0" class="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left hover:bg-accent-softer"><span title="Risk score 95 · High" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full py-0.5 pl-2 pr-2.5 border border-danger-border bg-danger-soft text-danger min-w-[94px] justify-center "><span class="tnum font-display text-[13px] font-bold">95</span><span class="text-[11px] font-semibold uppercase tracking-wide">High</span></span><div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-1.5"><span class="truncate text-[13.5px] font-semibold text-ink">CareRx Plus</span><span title="On watch list since May 11, 2026" aria-label="On watch list since May 11, 2026" class="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-accent/20 bg-accent-soft font-semibold text-accent h-[18px] w-[18px] justify-center "><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21l1.2-6.9-5-4.9 6.9-1z"></path></svg></span><span title="A prior case closed with corrective action, and new signals have appeared since. Raises review priority — not a determination." class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold border border-accent/20 bg-accent-soft text-accent  cursor-help">Prior corrective action</span><span title="On the RisRx monitoring list — drives the pre/post cost-per-unit trend analysis (Signal 3)." class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold border border-accent/20 bg-accent-soft text-accent  cursor-help">RisRx</span></div><div class="text-[11.5px] text-ink-4">Phoenix, AZ<span> · <span class="tnum">2</span> Nurtec claims</span></div></div><span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold border border-warn-border bg-warn-soft text-warn shrink-0 ">Investigating</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-ink-4"><path d="m9 6 6 6-6 6"></path></svg></div><div role="button" tabindex="0" class="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left hover:bg-accent-softer"><span title="Risk score 55 · High" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full py-0.5 pl-2 pr-2.5 border border-danger-border bg-danger-soft text-danger min-w-[94px] justify-center "><span class="tnum font-display text-[13px] font-bold">55</span><span class="text-[11px] font-semibold uppercase tracking-wide">High</span></span><div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-1.5"><span class="truncate text-[13.5px] font-semibold text-ink">SkinFirst Pharmacy</span><span title="Terminated by ConnectiveRx on May 10, 2026. Still shown because it can resurface under another vendor or product." aria-label="Terminated by ConnectiveRx on May 10, 2026. Still shown because it can resurface under another vendor or product." class="inline-flex shrink-0 cursor-help items-center gap-1 whitespace-nowrap font-semibold text-danger  "><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m5.7 5.7 12.6 12.6"></path></svg></span><span title="Joined this signal's scope within the last 14 days" class="shrink-0 rounded-full bg-accent-soft px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-accent">Newly detected</span></div><div class="text-[11.5px] text-ink-4">Portland, OR<span> · <span class="tnum">0</span> Nurtec claims</span></div></div><span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold border border-success-border bg-success-soft text-success shrink-0 ">Resolved</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-ink-4"><path d="m9 6 6 6-6 6"></path></svg></div></div><div class="flex flex-wrap items-center justify-between gap-2 border-t border-divider bg-page-soft px-4 py-2 text-[11.5px] text-ink-4"><span class="tnum">2 pharmacies</span><div class="flex items-center gap-3"><label class="flex items-center gap-1.5 opacity-40" title="All 2 pharmacies fit on one page">Per page<select aria-label="pharmacies per page" disabled="" class="h-6 rounded border border-line bg-surface px-1.5 text-[11.5px] font-semibold text-ink-2 focus:outline-none disabled:cursor-not-allowed"><option value="5">5</option><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></label><div class="flex items-center gap-2"><button disabled="" class="rounded-md border border-line px-2 py-1 font-semibold text-ink-2 enabled:hover:border-line-strong disabled:cursor-not-allowed disabled:opacity-40">Prev</button><span class="tnum opacity-40">1/1</span><button disabled="" class="rounded-md border border-line px-2 py-1 font-semibold text-ink-2 enabled:hover:border-line-strong disabled:cursor-not-allowed disabled:opacity-40">Next</button></div></div></div></section></div></main><footer class="mx-auto w-full max-w-[1600px] px-6 pb-20"><p class="border-t border-divider pt-4 text-center text-[11.5px] text-ink-4">Signal Detection is intended for internal use within the US only</p></footer><button aria-expanded="false" class="fixed bottom-6 right-6 z-30 flex h-12 items-center gap-2 rounded-full bg-ai px-5 text-[14px] font-semibold text-white shadow-pop transition-opacity hover:opacity-95"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM19 17l.9 2.1L22 20l-2.1.9L19 23l-.9-2.1L16 20l2.1-.9z"></path></svg>Ask AI</button></div></div>
+  <script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a465d62f6ae5f3ba',t:'MTc5MTMwMTk4Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><iframe height="1" width="1" style="position: absolute; top: 0px; left: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; visibility: hidden;"></iframe>
+
+<span id="recharts_measurement_span" aria-hidden="true" style="position: absolute; top: -20000px; left: 0px; padding: 0px; margin: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; white-space: pre; font-size: 10px; letter-spacing: normal;">7</span>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="../us-states.js"></script>
+    <script>
+      (function () {
+        var mapEl = document.getElementById("geo-hotspots-map");
+        if (!mapEl || typeof L === "undefined") return;
+
+        /* ---------- Map setup ---------- */
+        var usBounds = L.latLngBounds([24.5, -125], [49.5, -66.5]);
+        var map = L.map(mapEl, {
+          minZoom: 3,
+          maxZoom: 16,
+          scrollWheelZoom: false,
+          zoomControl: false,
+          attributionControl: true
+        });
+        map.attributionControl.setPrefix(false);
+        map.createPane("geoHotspots");
+        map.getPane("geoHotspots").style.zIndex = 620;
+        L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+          maxZoom: 16,
+          attribution: "Tiles \u00a9 Esri \u2014 Esri, HERE, Garmin, \u00a9 OpenStreetMap contributors"
+        }).addTo(map);
+        L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}", {
+          maxZoom: 16
+        }).addTo(map);
+        map.createPane("states");
+        map.getPane("states").style.zIndex = 450;
+        if (typeof statesData !== "undefined") {
+          L.geoJSON(statesData, {
+            pane: "states",
+            interactive: false,
+            style: {
+              color: "#8F98AD",
+              weight: 1,
+              opacity: 0.8,
+              fillColor: "#F4F5F9",
+              fillOpacity: 0.35
+            }
+          }).addTo(map);
+        }
+        L.control.zoom({ position: "bottomright" }).addTo(map);
+        var hotspotLayer = L.layerGroup().addTo(map);
+
+        /* ---------- Hotspot data ---------- */
+        // Illustrative data, not real
+        var HOTSPOTS = [
+          { id: "zip3-850", zip3: "850", name: "ZIP3 850", lat: 33.4484, lng: -112.0740, pharmacies: 5, exposureK: 640 },
+          { id: "zip3-303", zip3: "303", name: "ZIP3 303", lat: 33.7490, lng: -84.3880, pharmacies: 4, exposureK: 210 },
+          { id: "zip3-802", zip3: "802", name: "ZIP3 802", lat: 39.7392, lng: -104.9903, pharmacies: 3, exposureK: 85 }
+        ];
+
+        /* ---------- Marker rendering ---------- */
+        function exposureTier(exposureK) {
+          if (exposureK >= 1000) return "high";
+          if (exposureK >= 100) return "medium";
+          return "low";
+        }
+
+        function formatExposure(exposureK) {
+          if (exposureK >= 1000) return "$" + (exposureK / 1000).toFixed(1) + "M";
+          return "$" + Math.round(exposureK) + "K";
+        }
+
+        function hotspotDiameter(exposureK) {
+          var size = 30 + 42 * Math.sqrt(exposureK / 1700);
+          if (size < 38) return 38;
+          if (size > 76) return 76;
+          return size;
+        }
+
+        var card = document.querySelector(".geo-hotspots-card");
+        var panel = document.getElementById("geo-panel");
+        var panelOpen = false;
+        var panelTimer = 0;
+        var zip850Button = null;
+        var zip850MarkerEl = null;
+        var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var zip850LatLng = [33.4484, -112.0740];
+
+        function renderHotspots(hotspots) {
+          hotspotLayer.clearLayers();
+          zip850Button = null;
+          zip850MarkerEl = null;
+          var empty = document.getElementById("geo-hotspots-empty");
+          if (!hotspots || !hotspots.length) {
+            if (empty) empty.hidden = false;
+            return;
+          }
+          if (empty) empty.hidden = true;
+          hotspots.forEach(function (hotspot) {
+            var tier = exposureTier(hotspot.exposureK);
+            var diameter = hotspotDiameter(hotspot.exposureK);
+            var total = diameter + 14;
+            var fontSize = Math.max(11, Math.round(diameter * 0.22));
+            var exposureLabel = formatExposure(hotspot.exposureK);
+            var noun = hotspot.pharmacies === 1 ? "pharmacy" : "pharmacies";
+            var label = hotspot.name + ": " + exposureLabel + " exposure, " + hotspot.pharmacies + " " + noun;
+            var actionable = hotspot.id === "zip3-850";
+            var inner = '<span class="geo-hotspot-halo" aria-hidden="true"></span><span class="geo-hotspot-count" aria-hidden="true" style="font-size:' + fontSize + 'px">' + exposureLabel + "</span>";
+            var icon = L.divIcon({
+              className: "geo-hotspot-marker geo-hotspot-marker--" + tier + (actionable ? " geo-hotspot-marker--action" : ""),
+              html: actionable
+                ? '<button type="button" class="geo-hotspot-hit" aria-expanded="false" aria-controls="geo-panel">' + inner + "</button>"
+                : inner,
+              iconSize: [total, total],
+              iconAnchor: [total / 2, total / 2]
+            });
+            var createIcon = icon.createIcon.bind(icon);
+            icon.createIcon = function (oldIcon) {
+              var el = createIcon(oldIcon);
+              el.setAttribute("data-hotspot-id", hotspot.id);
+              if (!actionable) {
+                el.setAttribute("role", "img");
+                el.setAttribute("aria-label", label);
+                return el;
+              }
+              var button = el.querySelector(".geo-hotspot-hit");
+              button.setAttribute("aria-label", label);
+              button.setAttribute("aria-expanded", panelOpen ? "true" : "false");
+              button.onclick = toggleZip850Panel;
+              if (panelOpen) el.classList.add("is-selected");
+              zip850Button = button;
+              zip850MarkerEl = el;
+              return el;
+            };
+            L.marker([hotspot.lat, hotspot.lng], {
+              icon: icon,
+              pane: "geoHotspots",
+              interactive: false,
+              keyboard: false
+            }).addTo(hotspotLayer);
+          });
+        }
+
+        /* ---------- ZIP3 850 detail panel ---------- */
+        // Illustrative data, not real
+        var ZIP850_PHARMACIES = [
+          { id: "ph-carerx", name: "CareRx Plus", exposureK: 404 },
+          { id: "ph-desert-health-rx", name: "Desert Health Rx", exposureK: 140 },
+          { id: "ph-cactus-rx", name: "Cactus Rx", exposureK: 46 },
+          { id: "ph-saguaro-pharmacy", name: "Saguaro Pharmacy", exposureK: 28 },
+          { id: "ph-mesa-family-rx", name: "Mesa Family Rx", exposureK: 22 }
+        ];
+
+        // This page lives in _geo-shots, so the root-level pharmacy page is one folder up.
+        function pharmacyHref(row) {
+          if (row.id === "ph-carerx") return "../CareRXdetail.html";
+          return "/pharmacies/" + row.id;
+        }
+
+        function pharmacyRow(row) {
+          var item = document.createElement("div");
+          item.className = "geo-panel-row";
+
+          var name = document.createElement("a");
+          name.className = "geo-panel-name";
+          name.href = pharmacyHref(row);
+          name.textContent = row.name;
+
+          var amount = document.createElement("span");
+          amount.className = "geo-panel-amount";
+          amount.textContent = formatExposure(row.exposureK);
+
+          item.appendChild(name);
+          item.appendChild(amount);
+          return item;
+        }
+
+        function moreLabelText(hiddenCount) {
+          return "View " + hiddenCount + " more " + (hiddenCount === 1 ? "pharmacy" : "pharmacies");
+        }
+
+        function renderZip850Panel() {
+          if (!panel) return;
+          var pharmacies = ZIP850_PHARMACIES.slice().sort(function (a, b) {
+            return b.exposureK - a.exposureK;
+          });
+          var totalK = pharmacies.reduce(function (sum, row) {
+            return sum + row.exposureK;
+          }, 0);
+          var visibleCount = 3;
+          var hiddenCount = Math.max(0, pharmacies.length - visibleCount);
+
+          panel.textContent = "";
+          var inner = document.createElement("div");
+          inner.className = "geo-panel-inner";
+
+          var header = document.createElement("div");
+          header.className = "geo-panel-header";
+          var dot = document.createElement("span");
+          dot.className = "geo-panel-dot";
+          dot.setAttribute("aria-hidden", "true");
+          var title = document.createElement("h3");
+          title.className = "geo-panel-title";
+          title.id = "geo-panel-title";
+          title.textContent = "ZIP3 850";
+          var close = document.createElement("button");
+          close.type = "button";
+          close.className = "geo-panel-close";
+          close.setAttribute("aria-label", "Close panel");
+          close.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg>';
+          close.addEventListener("click", closeZip850Panel);
+          header.appendChild(dot);
+          header.appendChild(title);
+          header.appendChild(close);
+
+          var totals = document.createElement("div");
+          totals.className = "geo-panel-totals";
+          var total = document.createElement("div");
+          total.className = "geo-panel-total";
+          total.textContent = formatExposure(totalK);
+          var totalLabel = document.createElement("div");
+          totalLabel.className = "geo-panel-total-label";
+          totalLabel.textContent = "estimated potential exposure for this signal";
+          var count = document.createElement("div");
+          count.className = "geo-panel-count";
+          count.textContent = pharmacies.length + (pharmacies.length === 1 ? " pharmacy" : " pharmacies");
+          totals.appendChild(total);
+          totals.appendChild(totalLabel);
+          totals.appendChild(count);
+
+          var columns = document.createElement("div");
+          columns.className = "geo-panel-columns";
+          ["Pharmacy", "Exposure"].forEach(function (heading) {
+            var cell = document.createElement("span");
+            cell.textContent = heading;
+            columns.appendChild(cell);
+          });
+
+          var list = document.createElement("div");
+          list.id = "geo-panel-rows";
+          pharmacies.slice(0, visibleCount).forEach(function (row) {
+            list.appendChild(pharmacyRow(row));
+          });
+
+          var extra = document.createElement("div");
+          extra.className = "geo-panel-extra";
+          extra.id = "geo-panel-more-rows";
+          var clip = document.createElement("div");
+          clip.className = "geo-panel-extra-clip";
+          pharmacies.slice(visibleCount).forEach(function (row) {
+            clip.appendChild(pharmacyRow(row));
+          });
+          extra.appendChild(clip);
+
+          var more = document.createElement("button");
+          more.type = "button";
+          more.className = "geo-panel-more";
+          more.setAttribute("aria-expanded", "false");
+          more.setAttribute("aria-controls", "geo-panel-more-rows");
+          var moreLabel = document.createElement("span");
+          moreLabel.textContent = moreLabelText(hiddenCount);
+          var chevron = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          chevron.setAttribute("class", "geo-panel-chevron");
+          chevron.setAttribute("width", "13");
+          chevron.setAttribute("height", "13");
+          chevron.setAttribute("viewBox", "0 0 24 24");
+          chevron.setAttribute("fill", "none");
+          chevron.setAttribute("stroke", "currentColor");
+          chevron.setAttribute("stroke-width", "1.7");
+          chevron.setAttribute("stroke-linecap", "round");
+          chevron.setAttribute("stroke-linejoin", "round");
+          chevron.setAttribute("aria-hidden", "true");
+          var chevronPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          chevronPath.setAttribute("d", "m6 9 6 6 6-6");
+          chevron.appendChild(chevronPath);
+          more.appendChild(moreLabel);
+          more.appendChild(chevron);
+          more.addEventListener("mousedown", function (event) {
+            event.preventDefault();
+          });
+          more.addEventListener("click", function () {
+            var expanded = panel.classList.toggle("is-expanded");
+            more.setAttribute("aria-expanded", expanded ? "true" : "false");
+            moreLabel.textContent = expanded ? "Show less" : moreLabelText(hiddenCount);
+          });
+
+          inner.appendChild(header);
+          inner.appendChild(totals);
+          inner.appendChild(columns);
+          inner.appendChild(list);
+          if (hiddenCount) {
+            inner.appendChild(extra);
+            inner.appendChild(more);
+          }
+          panel.appendChild(inner);
+          panel.setAttribute("aria-labelledby", "geo-panel-title");
+        }
+
+        function setZip850State(open) {
+          if (zip850Button) zip850Button.setAttribute("aria-expanded", open ? "true" : "false");
+          if (zip850MarkerEl) zip850MarkerEl.classList.toggle("is-selected", open);
+        }
+
+        function settleMap() {
+          map.invalidateSize();
+          map.panTo(zip850LatLng, { animate: !reduceMotion, duration: 0.35 });
+        }
+
+        function openZip850Panel() {
+          if (!panel || !card) return;
+          window.clearTimeout(panelTimer);
+          panelOpen = true;
+          panel.hidden = false;
+          setZip850State(true);
+          if (reduceMotion) {
+            card.classList.add("is-open");
+            settleMap();
+            return;
+          }
+          window.requestAnimationFrame(function () {
+            card.classList.add("is-open");
+            settleMap();
+          });
+          panelTimer = window.setTimeout(settleMap, 220);
+        }
+
+        function closeZip850Panel() {
+          if (!panel || !card || !panelOpen) return;
+          window.clearTimeout(panelTimer);
+          panelOpen = false;
+          card.classList.remove("is-open");
+          panel.classList.remove("is-expanded");
+          var more = panel.querySelector(".geo-panel-more");
+          if (more) {
+            more.setAttribute("aria-expanded", "false");
+            var moreLabel = more.querySelector("span");
+            var hiddenRows = panel.querySelectorAll(".geo-panel-extra .geo-panel-row").length;
+            if (moreLabel) moreLabel.textContent = moreLabelText(hiddenRows);
+          }
+          setZip850State(false);
+          var finish = function () {
+            panel.hidden = true;
+            settleMap();
+            if (zip850Button) zip850Button.focus({ preventScroll: true });
+          };
+          if (reduceMotion) finish();
+          else panelTimer = window.setTimeout(finish, 200);
+        }
+
+        function toggleZip850Panel(event) {
+          if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          if (panelOpen) closeZip850Panel();
+          else openZip850Panel();
+        }
+
+        var zipListOpen = false;
+        var closeZipList = function () {};
+
+        document.addEventListener("keydown", function (event) {
+          if (event.key !== "Escape") return;
+          if (zipListOpen) {
+            event.preventDefault();
+            closeZipList();
+            return;
+          }
+          if (panelOpen) {
+            event.preventDefault();
+            closeZip850Panel();
+          }
+        });
+
+        /* ---------- ZIP3 search ---------- */
+        function searchZip3(value) {
+          var zip3 = String(value || "").replace(/\D/g, "").slice(0, 3);
+          if (zip3.length < 3) return null;
+          for (var i = 0; i < HOTSPOTS.length; i++) {
+            if (HOTSPOTS[i].zip3 === zip3) return HOTSPOTS[i];
+          }
+          return null;
+        }
+
+        function showZipMessage(text) {
+          var el = document.getElementById("geo-zip-message");
+          if (el) el.textContent = text || "";
+        }
+
+        function suggestionPlace(hotspot) {
+          if (hotspot.name === "ZIP3 850") return "Phoenix, AZ area";
+          return hotspot.name;
+        }
+
+        function zipSuggestions(digits) {
+          var found = [];
+          for (var i = 0; i < HOTSPOTS.length && found.length < 5; i++) {
+            if (HOTSPOTS[i].zip3.indexOf(digits) === 0) found.push(HOTSPOTS[i]);
+          }
+          return found;
+        }
+
+        function initZipSearch() {
+          var input = document.getElementById("geo-zip-input");
+          var list = document.getElementById("geo-zip-list");
+          var clearBtn = document.querySelector(".geo-zip-clear");
+          if (!input || !list || !clearBtn) return;
+          var activeIndex = -1;
+          var current = [];
+
+          function syncClear() {
+            clearBtn.hidden = input.value.length === 0;
+          }
+
+          function closeList() {
+            zipListOpen = false;
+            activeIndex = -1;
+            current = [];
+            list.hidden = true;
+            list.textContent = "";
+            input.setAttribute("aria-expanded", "false");
+            input.removeAttribute("aria-activedescendant");
+          }
+          closeZipList = closeList;
+
+          function paintActive() {
+            var options = list.querySelectorAll('[role="option"]');
+            for (var i = 0; i < options.length; i++) {
+              var on = i === activeIndex;
+              options[i].classList.toggle("is-active", on);
+              options[i].setAttribute("aria-selected", on ? "true" : "false");
+            }
+            if (activeIndex >= 0 && options[activeIndex]) input.setAttribute("aria-activedescendant", options[activeIndex].id);
+            else input.removeAttribute("aria-activedescendant");
+          }
+
+          function openList(matches) {
+            current = matches;
+            list.textContent = "";
+            if (!matches.length) {
+              closeList();
+              return;
+            }
+            matches.forEach(function (hotspot, index) {
+              var option = document.createElement("li");
+              option.id = "geo-zip-opt-" + index;
+              option.className = "geo-zip-option";
+              option.setAttribute("role", "option");
+              option.setAttribute("aria-selected", "false");
+              option.textContent = hotspot.zip3 + " \u00b7 " + suggestionPlace(hotspot);
+              option.addEventListener("mousedown", function (event) {
+                event.preventDefault();
+              });
+              option.addEventListener("mouseenter", function () {
+                activeIndex = index;
+                paintActive();
+              });
+              option.addEventListener("click", function () {
+                choose(hotspot);
+              });
+              list.appendChild(option);
+            });
+            list.hidden = false;
+            zipListOpen = true;
+            input.setAttribute("aria-expanded", "true");
+            paintActive();
+          }
+
+          function pulseHotspot(hotspot) {
+            map.panTo([hotspot.lat, hotspot.lng], { animate: !reduceMotion, duration: 0.35 });
+            if (reduceMotion) return;
+            var el = document.querySelector('[data-hotspot-id="' + hotspot.id + '"]');
+            if (!el) return;
+            el.classList.remove("is-pulse");
+            void el.offsetWidth;
+            var onEnd = function () {
+              el.classList.remove("is-pulse");
+              el.removeEventListener("animationend", onEnd);
+            };
+            el.addEventListener("animationend", onEnd);
+            el.classList.add("is-pulse");
+          }
+
+          function runSearch() {
+            closeList();
+            var digits = input.value.replace(/\D/g, "");
+            if (digits.length < 3) {
+              showZipMessage("Enter a 3-digit ZIP3.");
+              return;
+            }
+            var match = searchZip3(digits);
+            if (!match) {
+              showZipMessage("No hotspot for this signal in ZIP3 " + digits.slice(0, 3) + " under current criteria.");
+              return;
+            }
+            if (match.zip3 === "850") {
+              showZipMessage("");
+              if (!panelOpen) toggleZip850Panel();
+              return;
+            }
+            pulseHotspot(match);
+            showZipMessage("ZIP3 " + match.zip3 + " (" + match.name + "): " + formatExposure(match.exposureK) + " exposure. Detail panel not included in this prototype.");
+          }
+
+          function choose(hotspot) {
+            input.value = hotspot.zip3;
+            syncClear();
+            runSearch();
+          }
+
+          input.addEventListener("input", function () {
+            var digits = input.value.replace(/\D/g, "").slice(0, 5);
+            if (input.value !== digits) input.value = digits;
+            showZipMessage("");
+            syncClear();
+            activeIndex = -1;
+            var typed = input.value.replace(/\D/g, "");
+            if (!typed) closeList();
+            else openList(zipSuggestions(typed));
+          });
+
+          input.addEventListener("keydown", function (event) {
+            if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+              var matches = zipSuggestions(input.value.replace(/\D/g, ""));
+              if (!matches.length) return;
+              event.preventDefault();
+              if (!zipListOpen) openList(matches);
+              if (event.key === "ArrowDown") activeIndex = Math.min(matches.length - 1, activeIndex + 1);
+              else activeIndex = Math.max(0, activeIndex - 1);
+              paintActive();
+              return;
+            }
+            if (event.key === "Enter") {
+              event.preventDefault();
+              if (zipListOpen && activeIndex >= 0 && current[activeIndex]) choose(current[activeIndex]);
+              else runSearch();
+              return;
+            }
+            if (event.key === "Escape" && zipListOpen) {
+              event.preventDefault();
+              event.stopPropagation();
+              closeList();
+            }
+          });
+
+          clearBtn.addEventListener("mousedown", function (event) {
+            event.preventDefault();
+          });
+          clearBtn.addEventListener("click", function () {
+            input.value = "";
+            showZipMessage("");
+            syncClear();
+            closeList();
+            input.focus();
+          });
+        }
+
+        initZipSearch();
+
+        renderZip850Panel();
+
+        function currentSignalId() {
+          var nodes = document.querySelectorAll("span.font-mono");
+          for (var i = 0; i < nodes.length; i++) {
+            var text = nodes[i].textContent.replace(/^\s+|\s+$/g, "");
+            if (/^SIG-\d+$/.test(text)) return text;
+          }
+          return "";
+        }
+
+        var signalId = currentSignalId();
+        var showNone = new URLSearchParams(window.location.search).get("hotspots") === "none" || signalId !== "SIG-001";
+        renderHotspots(showNone ? [] : HOTSPOTS);
+
+        function fitUnitedStates() {
+          map.invalidateSize();
+          if (panelOpen) map.panTo(zip850LatLng, { animate: false });
+          else map.fitBounds(usBounds, { padding: [30, 30] });
+        }
+        fitUnitedStates();
+        window.requestAnimationFrame(fitUnitedStates);
+        window.addEventListener("load", fitUnitedStates);
+      })();
+    </script>
+  </body></html>
